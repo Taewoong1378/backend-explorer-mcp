@@ -1,4 +1,4 @@
-# backend-insight-gateway
+# backend-explorer-mcp
 
 The Backend Insight Gateway is a Model Context Protocol (MCP) server designed to help frontend developers understand backend code implementations using Cursor AI. This server provides tools to explore ERD, Swagger API documentation, and MongoDB databases.
 
@@ -115,7 +115,7 @@ PORT=8080
 ## Project Structure
 
 ```
-backend-insight-gateway/
+backend-explorer-mcp/
 ├── src/
 │   ├── tools/        # MCP tools
 │   │   ├── ERDTool.ts
@@ -139,7 +139,7 @@ Add the MCP server in Cursor settings:
 ```json
 {
   "command": "node",
-  "args": ["/absolute/path/to/backend-insight-gateway/dist/index.js"]
+  "args": ["/absolute/path/to/backend-explorer-mcp/dist/index.js"]
 }
 ```
 
@@ -155,9 +155,9 @@ Add the following configuration to your Claude Desktop config file:
 ```json
 {
   "mcpServers": {
-    "backend-insight-gateway": {
+    "backend-explorer-mcp": {
       "command": "node",
-      "args":["/absolute/path/to/backend-insight-gateway/dist/index.js"]
+      "args":["/absolute/path/to/backend-explorer-mcp/dist/index.js"]
     }
   }
 }
@@ -170,9 +170,9 @@ After publishing the package to npm, you can configure it as follows:
 ```json
 {
   "mcpServers": {
-    "backend-insight-gateway": {
+    "backend-explorer-mcp": {
       "command": "npx",
-      "args": ["backend-insight-gateway"]
+      "args": ["backend-explorer-mcp"]
     }
   }
 }
@@ -203,7 +203,7 @@ Make sure to set the appropriate access level in your `package.json`:
 
 ```json
 {
-  "name": "backend-insight-gateway",
+  "name": "backend-explorer-mcp",
   "publishConfig": {
     "access": "public" // or "restricted" for private packages
   }
