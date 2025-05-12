@@ -21,6 +21,13 @@ function parseCommandLineArgs() {
       i++; 
       continue;
     }
+    
+    // 플래그 형태의 인수 처리 (--stdio와 같은)
+    if (arg.startsWith('--')) {
+      const key = arg.slice(2);
+      parsedArgs[key] = 'true';
+      continue;
+    }
   }
   
   return parsedArgs;
@@ -68,17 +75,20 @@ process.stderr.write(`- ERD API: ${process.env.ERD_API_URL ? "Set" : "Not Set"}\
 process.stderr.write(`- Swagger API: ${process.env.SWAGGER_API_URL ? "Set" : "Not Set"}\n`);
 process.stderr.write(`- MongoDB: ${process.env.MONGODB_URI || process.env.MONGODB_CONNECTION_STRING ? "Set" : "Not Set"}\n`);
 process.stderr.write(`- Port: ${process.env.PORT || 3333}\n`);
+process.stderr.write(`- Transport: ${args['stdio'] || args['transport'] === 'stdio' ? "stdio" : "http-stream"}\n`);
 
 // MCP 서버 설정 및 시작
 const server = new MCPServer({
   name: "backend-explorer-mcp",
   version: "1.0.0",
-  transport: {
-    type: "http-stream",
-    options: {
-      port: process.env.PORT ? parseInt(process.env.PORT) : 3333
-    }
-  }
+  transport: args['stdio'] || args['transport'] === 'stdio' 
+    ? { type: "stdio" } 
+    : {
+        type: "http-stream",
+        options: {
+          port: process.env.PORT ? parseInt(process.env.PORT) : 3333
+        }
+      }
 });
 
 // 도구 처리와 응답 형식 디버깅을 위한 로깅

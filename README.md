@@ -157,7 +157,7 @@ Add the following configuration to your Claude Desktop config file:
   "mcpServers": {
     "backend-explorer-mcp": {
       "command": "node",
-      "args":["/absolute/path/to/backend-explorer-mcp/dist/index.js"]
+      "args":["/absolute/path/to/backend-explorer-mcp/dist/index.js", "--stdio"]
     }
   }
 }
@@ -172,7 +172,7 @@ After publishing the package to npm, you can configure it as follows:
   "mcpServers": {
     "backend-explorer-mcp": {
       "command": "npx",
-      "args": ["backend-explorer-mcp"]
+      "args": ["backend-explorer-mcp", "--stdio"]
     }
   }
 }
@@ -180,7 +180,7 @@ After publishing the package to npm, you can configure it as follows:
 
 ### Passing Configuration Parameters
 
-To provide database connection details and other settings, you can pass them as command line arguments or environment variables:
+To provide database connection details and other settings, you can pass them as command line arguments:
 
 ```json
 {
@@ -189,6 +189,7 @@ To provide database connection details and other settings, you can pass them as 
       "command": "npx",
       "args": [
         "backend-explorer-mcp",
+        "--stdio",
         "--mongodb-uri=mongodb://username:password@host:port/database",
         "--erd-api-url=https://your-api.example.com/erd",
         "--swagger-api-url=https://your-api.example.com/swaggerJson"
@@ -205,7 +206,7 @@ Alternatively, you can use the `env` section to provide environment variables:
   "mcpServers": {
     "backend-explorer-mcp": {
       "command": "npx",
-      "args": ["backend-explorer-mcp"],
+      "args": ["backend-explorer-mcp", "--stdio"],
       "env": {
         "MONGODB_URI": "mongodb://username:password@host:port/database",
         "ERD_API_URL": "https://your-api.example.com/erd",
