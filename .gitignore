@@ -1,0 +1,5 @@
+.env
+node_modules
+dist
+# MCP server will ignore .env file in gitignore
+.env

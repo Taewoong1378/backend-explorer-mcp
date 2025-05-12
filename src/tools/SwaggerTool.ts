@@ -1,0 +1,162 @@
+import axios from "axios";
+import { MCPTool } from "mcp-framework";
+import { z } from "zod";
+
+interface SwaggerToolInput {
+  options?: {
+    format?: string;
+    path?: string;
+  };
+}
+
+class SwaggerTool extends MCPTool<SwaggerToolInput> {
+  name = "get_swagger";
+  description = "Retrieves Swagger API documentation to explore backend API endpoints, parameters, response schemas, and more.";
+
+  schema = {
+    options: {
+      type: z.object({
+        format: z.enum(["json", "markdown"]).optional().default("json"),
+        path: z.string().optional(),
+      }).optional(),
+      description: "Options for the response format ('json' or 'markdown') and specific API path to filter (optional)",
+    },
+  };
+
+  async execute(input: SwaggerToolInput) {
+    try {
+      const format = input.options?.format || "json";
+      const path = input.options?.path;
+      const swaggerApiUrl = process.env.SWAGGER_API_URL;
+      
+      if (!swaggerApiUrl) {
+        return {
+          error: true,
+          message: "SWAGGER_API_URL is not set in the environment variables"
+        };
+      }
+
+      const response = await axios.get(swaggerApiUrl);
+      
+      let data = response.data;
+      
+      // Filter for specific path if provided
+      if (path && data.paths && data.paths[path]) {
+        data = {
+          ...data,
+          paths: {
+            [path]: data.paths[path]
+          }
+        };
+      }
+      
+      if (format === "markdown") {
+        return this.convertToMarkdown(data, path);
+      }
+      
+      return data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        return {
+          error: true,
+          message: `Failed to retrieve Swagger information: ${error.message}`,
+          status: error.response?.status || 500
+        };
+      }
+      return {
+        error: true,
+        message: `Failed to retrieve Swagger information: ${error}`,
+      };
+    }
+  }
+
+  private convertToMarkdown(data: any, specificPath?: string): string {
+    try {
+      let markdown = "# API Documentation (Swagger)\n\n";
+      
+      if (data.info) {
+        markdown += `## ${data.info.title || 'API Documentation'}\n\n`;
+        markdown += `${data.info.description || ''}\n\n`;
+        
+        if (data.info.version) {
+          markdown += `**Version**: ${data.info.version}\n\n`;
+        }
+      }
+      
+      if (data.paths) {
+        markdown += "## Endpoints\n\n";
+        
+        Object.entries(data.paths).forEach(([path, methods]: [string, any]) => {
+          markdown += `### ${path}\n\n`;
+          
+          Object.entries(methods).forEach(([method, info]: [string, any]) => {
+            markdown += `#### ${method.toUpperCase()}\n\n`;
+            
+            if (info.summary) {
+              markdown += `**Summary**: ${info.summary}\n\n`;
+            }
+            
+            if (info.description) {
+              markdown += `**Description**: ${info.description}\n\n`;
+            }
+            
+            if (info.parameters && info.parameters.length > 0) {
+              markdown += "**Parameters**:\n\n";
+              markdown += "| Name | Location | Required | Type | Description |\n";
+              markdown += "|------|----------|----------|------|-------------|\n";
+              
+              info.parameters.forEach((param: any) => {
+                markdown += `| ${param.name} | ${param.in} | ${param.required ? 'Yes' : 'No'} | ${param.type || (param.schema && param.schema.type) || ''} | ${param.description || ''} |\n`;
+              });
+              
+              markdown += "\n";
+            }
+            
+            if (info.requestBody) {
+              markdown += "**Request Body**:\n\n";
+              
+              if (info.requestBody.content && info.requestBody.content["application/json"] && 
+                  info.requestBody.content["application/json"].schema) {
+                const schema = info.requestBody.content["application/json"].schema;
+                
+                if (schema.properties) {
+                  markdown += "| Property | Type | Required | Description |\n";
+                  markdown += "|----------|------|----------|-------------|\n";
+                  
+                  Object.entries(schema.properties).forEach(([prop, details]: [string, any]) => {
+                    const required = schema.required && schema.required.includes(prop);
+                    markdown += `| ${prop} | ${details.type || ''} | ${required ? 'Yes' : 'No'} | ${details.description || ''} |\n`;
+                  });
+                  
+                  markdown += "\n";
+                }
+              }
+            }
+            
+            if (info.responses) {
+              markdown += "**Responses**:\n\n";
+              
+              Object.entries(info.responses).forEach(([code, response]: [string, any]) => {
+                markdown += `**${code}**: ${response.description || ''}\n\n`;
+                
+                if (response.content && response.content["application/json"] && 
+                    response.content["application/json"].schema) {
+                  markdown += "Response schema:\n";
+                  markdown += "```json\n";
+                  markdown += JSON.stringify(response.content["application/json"].schema, null, 2);
+                  markdown += "\n```\n\n";
+                }
+              });
+            }
+          });
+        });
+      }
+      
+      return markdown;
+    } catch (error) {
+      return `Failed to convert Swagger data to markdown: ${error}. Please use JSON format instead.`;
+    }
+  }
+}
+
+export default SwaggerTool; 

@@ -1,0 +1,55 @@
+{
+  "name": "backend-explorer-mcp",
+  "version": "1.0.0",
+  "description": "A Model Context Protocol (MCP) server for exploring backend systems through ERD, Swagger API docs, and MongoDB data to integrate with AI assistants",
+  "type": "module",
+  "bin": {
+    "backend-explorer": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && mcp-build",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@types/node-fetch": "^2.6.12",
+    "axios": "^1.9.0",
+    "dotenv": "^16.5.0",
+    "mcp-framework": "^0.2.2",
+    "mongodb": "^6.16.0",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "mcp",
+    "cursor",
+    "claude",
+    "backend",
+    "documentation",
+    "erd",
+    "swagger",
+    "mongodb",
+    "explorer",
+    "ai-assistant"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/backend-explorer-mcp"
+  }
+}
