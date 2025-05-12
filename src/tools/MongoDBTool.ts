@@ -66,7 +66,7 @@ class MongoDBTool extends MCPTool<MongoDBToolInput> {
     return this.mongoClient;
   }
 
-  async execute(input: MongoDBToolInput) {
+  async execute(input: MongoDBToolInput): Promise<any> {
     try {
       const format = input.options?.format || "json";
       const limit = input.options?.limit || 10;
@@ -82,71 +82,130 @@ class MongoDBTool extends MCPTool<MongoDBToolInput> {
             break;
           case "describeCollection":
             if (!input.collection) {
-              return {
-                error: true,
-                message: "Collection name is required."
+              const errorResponse = {
+                content: [
+                  {
+                    type: "text",
+                    text: "Collection name is required."
+                  }
+                ]
               };
+              return errorResponse;
             }
             result = await this.describeCollection(client, input.collection);
             break;
           case "sampleData":
             if (!input.collection) {
-              return {
-                error: true,
-                message: "Collection name is required."
+              const errorResponse = {
+                content: [
+                  {
+                    type: "text",
+                    text: "Collection name is required."
+                  }
+                ]
               };
+              return errorResponse;
             }
             result = await this.getSampleData(client, input.collection, limit);
             break;
           case "query":
             if (!input.collection) {
-              return {
-                error: true,
-                message: "Collection name is required."
+              const errorResponse = {
+                content: [
+                  {
+                    type: "text",
+                    text: "Collection name is required."
+                  }
+                ]
               };
+              return errorResponse;
             }
             if (!input.query) {
-              return {
-                error: true,
-                message: "Query is required."
+              const errorResponse = {
+                content: [
+                  {
+                    type: "text",
+                    text: "Query is required."
+                  }
+                ]
               };
+              return errorResponse;
             }
             
             let query;
             try {
               query = JSON.parse(input.query);
             } catch (e) {
-              return {
-                error: true,
-                message: `Invalid query format: ${e}`
+              const errorResponse = {
+                content: [
+                  {
+                    type: "text",
+                    text: `Invalid query format: ${e}`
+                  }
+                ]
               };
+              return errorResponse;
             }
             
             result = await this.runQuery(client, input.collection, query, limit);
             break;
           default:
-            return {
-              error: true,
-              message: "Unknown action"
+            const errorResponse = {
+              content: [
+                {
+                  type: "text",
+                  text: "Unknown action"
+                }
+              ]
             };
+            return errorResponse;
         }
       } catch (err) {
-        return {
-          error: true,
-          message: `MongoDB operation failed: ${err}`
+        console.error("MongoDB operation failed:", err);
+        const errorResponse = {
+          content: [
+            {
+              type: "text",
+              text: `MongoDB operation failed: ${err}`
+            }
+          ]
         };
+        return errorResponse;
       }
       
       if (format === "markdown") {
-        return this.convertToMarkdown(result, input.action, input.collection);
+        const markdown = this.convertToMarkdown(result, input.action, input.collection);
+        const response = {
+          content: [
+            {
+              type: "text",
+              text: markdown
+            }
+          ]
+        };
+        return response;
       }
       
-      return result;
-    } catch (error) {
-      return {
-        error: true,
-        message: `Failed to retrieve MongoDB information: ${error}`,
+      const response = {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2)
+          }
+        ]
       };
+      return response;
+    } catch (error) {
+      console.error("MongoDBTool unexpected error:", error);
+      const errorResponse = {
+        content: [
+          {
+            type: "text",
+            text: `Failed to retrieve MongoDB information: ${error instanceof Error ? error.message : error}`
+          }
+        ]
+      };
+      return errorResponse;
     }
   }
 

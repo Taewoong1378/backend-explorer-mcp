@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import { MCPServer } from "mcp-framework";
 
-
 function parseCommandLineArgs() {
   const args = process.argv.slice(2);
   const parsedArgs: Record<string, string> = {};
@@ -27,9 +26,7 @@ function parseCommandLineArgs() {
   return parsedArgs;
 }
 
-
 function setEnvFromArgs(args: Record<string, string>) {
-  
   if (args['mongodb-uri']) {
     process.env.MONGODB_URI = args['mongodb-uri'];
   }
@@ -66,15 +63,34 @@ dotenv.config();
 const args = parseCommandLineArgs();
 setEnvFromArgs(args);
 
-const server = new MCPServer();
+process.stderr.write("Backend Explorer MCP server started with configuration:\n");
+process.stderr.write(`- ERD API: ${process.env.ERD_API_URL ? "Set" : "Not Set"}\n`);
+process.stderr.write(`- Swagger API: ${process.env.SWAGGER_API_URL ? "Set" : "Not Set"}\n`);
+process.stderr.write(`- MongoDB: ${process.env.MONGODB_URI || process.env.MONGODB_CONNECTION_STRING ? "Set" : "Not Set"}\n`);
+process.stderr.write(`- Port: ${process.env.PORT || 3333}\n`);
 
-server.start().catch((error) => {
-  console.error("Error starting server:", error);
-  process.exit(1);
+// MCP 서버 설정 및 시작
+const server = new MCPServer({
+  name: "backend-explorer-mcp",
+  version: "1.0.0",
+  transport: {
+    type: "http-stream",
+    options: {
+      port: process.env.PORT ? parseInt(process.env.PORT) : 3333
+    }
+  }
 });
 
-console.log("Backend Explorer MCP server started with configuration:");
-console.log(`- ERD API: ${process.env.ERD_API_URL ? "설정됨" : "설정되지 않음"}`);
-console.log(`- Swagger API: ${process.env.SWAGGER_API_URL ? "설정됨" : "설정되지 않음"}`);
-console.log(`- MongoDB: ${process.env.MONGODB_URI || process.env.MONGODB_CONNECTION_STRING ? "설정됨" : "설정되지 않음"}`);
-console.log(`- Port: ${process.env.PORT || 3333}`);
+// 도구 처리와 응답 형식 디버깅을 위한 로깅
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('처리되지 않은 거부(unhandled rejection):', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('처리되지 않은 예외(uncaught exception):', error);
+});
+
+server.start().catch((error) => {
+  console.error("서버 시작 오류:", error);
+  process.exit(1);
+});

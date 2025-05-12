@@ -21,37 +21,85 @@ class ERDTool extends MCPTool<ERDToolInput> {
     },
   };
 
-  async execute(input: ERDToolInput) {
+  async execute(input: ERDToolInput): Promise<any> {
     try {
       const format = input.options?.format || "json";
       const erdApiUrl = process.env.ERD_API_URL;
       
       if (!erdApiUrl) {
-        return {
-          error: true,
-          message: "ERD_API_URL is not set in the environment variables"
+        const errorResponse = {
+          content: [
+            {
+              type: "text",
+              text: "ERD_API_URL is not set in the environment variables"
+            }
+          ]
         };
+        return errorResponse;
       }
       
-      const response = await axios.get(erdApiUrl);
-      
-      if (format === "markdown") {
-        return this.convertToMarkdown(response.data);
+      try {
+        const response = await axios.get(erdApiUrl);
+        
+        if (format === "markdown") {
+          const markdown = this.convertToMarkdown(response.data);
+          const successResponse = {
+            content: [
+              {
+                type: "text", 
+                text: markdown
+              }
+            ]
+          };
+          return successResponse;
+        }
+        
+        const jsonResponse = {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(response.data, null, 2)
+            }
+          ]
+        };
+        return jsonResponse;
+      } catch (requestError) {
+        console.error("ERDTool axios error:", requestError);
+        let errorMessage = "Unknown error";
+        
+        if (axios.isAxiosError(requestError)) {
+          errorMessage = `Failed to retrieve ERD information: ${requestError.message}`;
+        } else if (requestError instanceof Error) {
+          errorMessage = requestError.message;
+        }
+        
+        const errorResponse = {
+          content: [
+            {
+              type: "text",
+              text: errorMessage
+            }
+          ]
+        };
+        return errorResponse;
       }
-      
-      return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return {
-          error: true,
-          message: `Failed to retrieve ERD information: ${error.message}`,
-          status: error.response?.status || 500
-        };
+      console.error("ERDTool unexpected error:", error);
+      let errorMessage = "Unknown error";
+      
+      if (error instanceof Error) {
+        errorMessage = `Failed to retrieve ERD information: ${error.message}`;
       }
-      return {
-        error: true,
-        message: `Failed to retrieve ERD information: ${error}`,
+      
+      const errorResponse = {
+        content: [
+          {
+            type: "text",
+            text: errorMessage
+          }
+        ]
       };
+      return errorResponse;
     }
   }
 

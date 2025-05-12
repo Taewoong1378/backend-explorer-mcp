@@ -23,50 +23,98 @@ class SwaggerTool extends MCPTool<SwaggerToolInput> {
     },
   };
 
-  async execute(input: SwaggerToolInput) {
+  async execute(input: SwaggerToolInput): Promise<any> {
     try {
       const format = input.options?.format || "json";
       const path = input.options?.path;
       const swaggerApiUrl = process.env.SWAGGER_API_URL;
       
       if (!swaggerApiUrl) {
-        return {
-          error: true,
-          message: "SWAGGER_API_URL is not set in the environment variables"
+        const errorResponse = {
+          content: [
+            {
+              type: "text",
+              text: "SWAGGER_API_URL is not set in the environment variables"
+            }
+          ]
         };
+        return errorResponse;
       }
 
-      const response = await axios.get(swaggerApiUrl);
-      
-      let data = response.data;
-      
-      // Filter for specific path if provided
-      if (path && data.paths && data.paths[path]) {
-        data = {
-          ...data,
-          paths: {
-            [path]: data.paths[path]
-          }
+      try {
+        const response = await axios.get(swaggerApiUrl);
+        
+        let data = response.data;
+        
+        // Filter for specific path if provided
+        if (path && data.paths && data.paths[path]) {
+          data = {
+            ...data,
+            paths: {
+              [path]: data.paths[path]
+            }
+          };
+        }
+        
+        if (format === "markdown") {
+          const markdown = this.convertToMarkdown(data, path);
+          const markdownResponse = {
+            content: [
+              {
+                type: "text",
+                text: markdown
+              }
+            ]
+          };
+          return markdownResponse;
+        }
+        
+        const jsonResponse = {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(data, null, 2)
+            }
+          ]
         };
+        return jsonResponse;
+      } catch (requestError) {
+        console.error("SwaggerTool axios error:", requestError);
+        let errorMessage = "Unknown error";
+        
+        if (axios.isAxiosError(requestError)) {
+          errorMessage = `Failed to retrieve Swagger information: ${requestError.message}`;
+        } else if (requestError instanceof Error) {
+          errorMessage = requestError.message;
+        }
+        
+        const errorResponse = {
+          content: [
+            {
+              type: "text",
+              text: errorMessage
+            }
+          ]
+        };
+        return errorResponse;
       }
-      
-      if (format === "markdown") {
-        return this.convertToMarkdown(data, path);
-      }
-      
-      return data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return {
-          error: true,
-          message: `Failed to retrieve Swagger information: ${error.message}`,
-          status: error.response?.status || 500
-        };
+      console.error("SwaggerTool unexpected error:", error);
+      let errorMessage = "Unknown error";
+      
+      if (error instanceof Error) {
+        errorMessage = `Failed to retrieve Swagger information: ${error.message}`;
       }
-      return {
-        error: true,
-        message: `Failed to retrieve Swagger information: ${error}`,
+      
+      const errorResponse = {
+        content: [
+          {
+            type: "text",
+            text: errorMessage
+          }
+        ]
       };
+      return errorResponse;
     }
   }
 

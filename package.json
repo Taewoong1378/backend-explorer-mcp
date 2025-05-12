@@ -1,10 +1,10 @@
 {
   "name": "backend-explorer-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A Model Context Protocol (MCP) server for exploring backend systems through ERD, Swagger API docs, and MongoDB data to integrate with AI assistants",
   "type": "module",
   "bin": {
-    "backend-explorer-mcp": "./dist/cli.js"
+    "backend-explorer-mcp": "./dist/index.js"
   },
   "files": [
     "dist"
@@ -16,6 +16,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.1",
     "@types/node-fetch": "^2.6.12",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
