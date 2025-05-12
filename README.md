@@ -178,6 +178,44 @@ After publishing the package to npm, you can configure it as follows:
 }
 ```
 
+### Passing Configuration Parameters
+
+To provide database connection details and other settings, you can pass them as command line arguments or environment variables:
+
+```json
+{
+  "mcpServers": {
+    "backend-explorer-mcp": {
+      "command": "npx",
+      "args": [
+        "backend-explorer-mcp",
+        "--mongodb-uri=mongodb://username:password@host:port/database",
+        "--erd-api-url=https://your-api.example.com/erd",
+        "--swagger-api-url=https://your-api.example.com/swaggerJson"
+      ]
+    }
+  }
+}
+```
+
+Alternatively, you can use the `env` section to provide environment variables:
+
+```json
+{
+  "mcpServers": {
+    "backend-explorer-mcp": {
+      "command": "npx",
+      "args": ["backend-explorer-mcp"],
+      "env": {
+        "MONGODB_URI": "mongodb://username:password@host:port/database",
+        "ERD_API_URL": "https://your-api.example.com/erd",
+        "SWAGGER_API_URL": "https://your-api.example.com/swaggerJson"
+      }
+    }
+  }
+}
+```
+
 ## Building and Testing
 
 1. Modify the tools
